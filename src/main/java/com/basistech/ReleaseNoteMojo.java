@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maven.plugins.core.GitHubProjectMojo;
 import com.github.maven.plugins.core.egit.GitHubClientEgit;
+import com.google.common.io.ByteSource;
+import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.execution.MavenSession;
@@ -32,6 +34,9 @@ import org.apache.maven.settings.Settings;
 import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -39,6 +44,11 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Properties;
 
 /**
@@ -105,6 +115,12 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
     @Parameter( defaultValue = "${guthub.global.server}")
     private String server;
 
+    /**
+     * With GFE, you might not have enough certificates in your chain.
+     */
+    @Parameter
+    private File keystore;
+
     @Component
     private MavenProject project;
 
@@ -125,6 +141,14 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
             releaseNoteContent = FileUtils.readFileToString(releaseNotes, "utf-8");
         } catch (IOException e) {
             throw new MojoExecutionException("Failed to read notes", e);
+        }
+
+        if (keystore != null) {
+            try {
+                setupSslCert(keystore);
+            } catch (Exception e) {
+                throw new MojoExecutionException("Failed to install SSL certificate in trust chain.", e);
+            }
         }
 
         RepositoryId repository = getRepository(project, repositoryOwner, repositoryName);
@@ -174,11 +198,32 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
             } finally {
                 IOUtils.closeQuietly(is);
             }
-            if (releaseProps.contains("scm.tag")) {
-                return (String) releaseProps.get("scm.tag");
+
+            String propTag = (String) releaseProps.get("scm.tag");
+            if (propTag != null) {
+                return propTag;
             }
         }
         throw new MojoExecutionException("No scm tag information available.");
+    }
+
+    // this is a rather global change to the universe, is it not?
+    private void setupSslCert(File trustStore) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, KeyManagementException {
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
+        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+        ByteSource keystoreByteSource = Files.asByteSource(trustStore);
+        InputStream keystoreStream = null;
+        try {
+            keystoreStream = keystoreByteSource.openStream();
+            keystore.load(keystoreStream, password.toCharArray());
+        } finally {
+            IOUtils.closeQuietly(keystoreStream);
+        }
+        trustManagerFactory.init(keystore);
+        TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+        SSLContext sc = SSLContext.getInstance("SSL");
+        sc.init(null, trustManagers, null);
+        SSLContext.setDefault(sc);
     }
 
     /**
@@ -193,7 +238,7 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
     protected GitHubClient createClient(String hostname)
             throws MojoExecutionException {
         if (!hostname.contains("://"))
-            return new GitHubClientEgit(hostname);
+            return new ExtendedGithubClient(hostname);
         try {
             URL hostUrl = new URL(hostname);
             return new ExtendedGithubClient(hostUrl.getHost(), hostUrl.getPort(),
