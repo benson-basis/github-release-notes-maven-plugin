@@ -17,12 +17,12 @@ package com.basistech;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.maven.plugins.core.GitHubProjectMojo;
-import com.github.maven.plugins.core.egit.GitHubClientEgit;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.execution.MavenSession;
+import org.apache.maven.model.Scm;
 import org.apache.maven.plugin.MojoExecutionException;
 
 import org.apache.maven.plugins.annotations.Component;
@@ -31,7 +31,6 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.settings.Settings;
-import org.eclipse.egit.github.core.RepositoryId;
 import org.eclipse.egit.github.core.client.GitHubClient;
 
 import javax.net.ssl.SSLContext;
@@ -70,18 +69,6 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
      */
     @Parameter( property = "tag" )
     private String tag;
-
-    /**
-     * The name of the repository. This setting must be set if the project's url and scm metadata are not set.
-     */
-    @Parameter
-    private String repositoryName;
-
-    /**
-     * The owner of repository. This setting must be set if the project's url and scm metadata are not set.
-     */
-    @Parameter
-    private String repositoryOwner;
 
     /**
      * The user name for authentication
@@ -130,6 +117,9 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
     @Component
     private Settings settings;
 
+    private String owner;
+    private String repoName;
+
     public void execute() throws MojoExecutionException {
         if (skip) {
             info("Github Release Notes Plugin execution skipped");
@@ -151,7 +141,8 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
             }
         }
 
-        RepositoryId repository = getRepository(project, repositoryOwner, repositoryName);
+        parseScm();
+
         ExtendedGithubClient client = (ExtendedGithubClient) createClient(host, userName, password, oauth2Token, server, settings, session);
         String tagName = getTagName();
 
@@ -160,7 +151,7 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
         HttpURLConnection connection = null;
         try {
         /* Start by trying to create a new one. We might have to fall back to PATCH */
-            String uri = String.format("/repos/%s/%s/releases", repository.getOwner(), repository.getName());
+            String uri = String.format("/repos/%s/%s/releases", owner, repoName);
             connection = client.createPost(uri);
             ObjectMapper mapper = new ObjectMapper();
             byte[] reqAsBytes = mapper.writeValueAsBytes(releaseInfo);
@@ -174,6 +165,26 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
             }
         }
         info(response.get("url").asText());
+    }
+
+    private void parseScm() {
+        final Scm scm = project.getScm();
+        // the util class from egit is broken.
+        // assume git: url for now.
+        //scm:git:git@git.basistech.net:benson/test-release-notes.git
+        String devUrl = scm.getDeveloperConnection();
+        int atx = devUrl.indexOf('@');
+        String some = devUrl.substring(atx + 1);
+        int colidx = some.indexOf(':');
+        if (host == null) {
+            host = some.substring(0, colidx);
+        }
+        String ownerRepo = some.substring(colidx + 1);
+        int slidx = ownerRepo.indexOf('/');
+        owner = ownerRepo.substring(0, slidx);
+        ownerRepo = ownerRepo.substring(slidx + 1);
+        int dotidx = ownerRepo.indexOf('.');
+        repoName = ownerRepo.substring(0, dotidx);
     }
 
     private String getTagName() throws MojoExecutionException {
