@@ -215,7 +215,8 @@ public class ReleaseNoteMojo extends GitHubProjectMojo {
         InputStream keystoreStream = null;
         try {
             keystoreStream = keystoreByteSource.openStream();
-            keystore.load(keystoreStream, password.toCharArray());
+            //TODO: deal with the actual password whatever it is.
+            keystore.load(keystoreStream, "changeit".toCharArray());
         } finally {
             IOUtils.closeQuietly(keystoreStream);
         }
