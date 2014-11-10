@@ -200,9 +200,38 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
         }
 
         WebTarget target = client.target(uri);
-        setupProxy(target);
+
+
+        String existingRelease = getExistingRelease(tagName, target);
+        createRelease(existingRelease, releaseInfo, target);
+    }
+
+    private String getExistingRelease(String tagName, WebTarget target) {
         Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
-        Invocation invocation = invocationBuilder.buildPost(Entity.json(releaseInfo));
+        List<Map<String, Object>> releases = invocationBuilder.get(new GenericType<List<Map<String, Object>>>() { });
+        for (Map<String, Object> release : releases) {
+            if (tagName.equals(release.get("tag_name"))) {
+                return release.get("id").toString(); // map integer to string
+            }
+        }
+        return null;
+    }
+
+    private void createRelease(String existingRelease, ReleaseInfo releaseInfo, WebTarget target) {
+        if (existingRelease != null) {
+            target = target.path(existingRelease);
+        }
+
+        Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
+        setupProxy(invocationBuilder);
+
+        Invocation invocation;
+        if (existingRelease != null) {
+            invocation = invocationBuilder.build("PATCH", Entity.json(releaseInfo));
+        } else {
+            invocation = invocationBuilder.buildPost(Entity.json(releaseInfo));
+        }
+
         try {
             Map<String, Object> response = invocation.invoke(new GenericType<Map<String, Object>>() {
             });
@@ -432,7 +461,7 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
         return false;
     }
 
-    private void setupProxy(WebTarget target) throws MojoExecutionException {
+    private void setupProxy(Invocation.Builder target) throws MojoExecutionException {
         Proxy proxy = getProxy(settings, serverId);
         if (null != proxy) {
             ClientConfiguration cxfConfig = WebClient.getConfig(target);
