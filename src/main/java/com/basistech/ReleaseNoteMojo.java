@@ -128,7 +128,7 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
      * The <em>id</em> of the server to use to retrieve the Github credentials. This id must identify a
      * <em>server</em> from your <em>setting.xml</em> file.
      */
-    @Parameter(defaultValue = "${guthub.global.server}", property = "server")
+    @Parameter(defaultValue = "${github.global.server}", property = "server")
     private String serverId;
 
     /**
@@ -269,7 +269,7 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
             try {
                 builder.trustStore(readTrustStore(keystore));
             } catch (Exception e) {
-                throw new MojoExecutionException("Exception setting up SSL keystore", e);
+                throw new MojoExecutionException("Exception setting up SSL trust store", e);
             }
         }
         Client client = builder.build();
