@@ -11,6 +11,10 @@
         <version>1.5.1</version>
     </parent>
     <name>github-release-notes-maven-plugin Maven Plugin</name>
+    <description>
+      A Maven plugin that pushes release notes to the github
+      release/tag structure.
+    </description>
     <distributionManagement>
         <site>
             <id>github-site</id>
