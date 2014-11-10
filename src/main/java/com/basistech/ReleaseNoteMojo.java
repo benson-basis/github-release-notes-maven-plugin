@@ -196,7 +196,6 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
 
         ReleaseInfo releaseInfo = new ReleaseInfo(tagName, null, tagName, releaseNoteContent, false, false);
 
-        /* Start by trying to create a new one. We might have to fall back to PATCH */
         String uri;
         if ("github.com".equals(host)) {
             uri = String.format("https://api.github.com/repos/%s/%s/releases", owner, repoName);
@@ -268,7 +267,7 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
         builder.register(new JacksonJsonProvider());
         if (keystore != null) {
             try {
-                builder.trustStore(setupSslCert(keystore));
+                builder.trustStore(readTrustStore(keystore));
             } catch (Exception e) {
                 throw new MojoExecutionException("Exception setting up SSL keystore", e);
             }
@@ -544,14 +543,17 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
         throw new MojoExecutionException("No scm tag information available.");
     }
 
-    // this is a rather global change to the universe, is it not?
-    private KeyStore setupSslCert(File trustStore) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, KeyManagementException {
+    /*
+     * Read a trust store. Trust stores are represented as KeyStore objects, just to confuse us.
+     */
+    private KeyStore readTrustStore(File trustStore) throws IOException, NoSuchAlgorithmException, KeyStoreException, CertificateException, KeyManagementException {
         KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
         ByteSource keystoreByteSource = Files.asByteSource(trustStore);
         InputStream keystoreStream = null;
         try {
             keystoreStream = keystoreByteSource.openStream();
             //TODO: deal with the actual password whatever it is.
+            // there's no good reason to use a fancy password on a trust store.
             keystore.load(keystoreStream, "changeit".toCharArray());
         } finally {
             IOUtils.closeQuietly(keystoreStream);
