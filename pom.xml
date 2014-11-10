@@ -1,20 +1,30 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.basistech</groupId>
     <artifactId>github-release-notes-maven-plugin</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
-
+    <parent>
+        <groupId>com.simpligility.maven</groupId>
+        <artifactId>progressive-organization-pom</artifactId>
+        <version>1.5.1</version>
+    </parent>
     <name>github-release-notes-maven-plugin Maven Plugin</name>
-
-    <url>http://maven.apache.org</url>
-
+    <distributionManagement>
+        <site>
+            <id>github-site</id>
+            <url>scm:git:git@github.com/benson-basis/github-release-notes-maven-plugin.git</url>
+        </site>
+    </distributionManagement>
+    <url>http://github.com/benson-basis/github-release-notes-maven-plugin</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.version>3.0.4</maven.version>
     </properties>
-
+    <prerequisites>
+        <maven>3.0.4</maven>
+    </prerequisites>
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -33,14 +43,12 @@
             <version>3.0.5</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>org.apache.maven.plugin-tools</groupId>
             <artifactId>maven-plugin-annotations</artifactId>
             <version>3.2</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -94,9 +102,59 @@
             <version>2.4.3</version>
         </dependency>
     </dependencies>
-
     <build>
+        <defaultGoal>install</defaultGoal>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>nexus-staging-maven-plugin</artifactId>
+                    <extensions>true</extensions>
+                    <inherited>false</inherited>
+                    <configuration>
+                        <serverId>ossrh-releases</serverId>
+                        <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                        <stagingProfileId>af82fa330d4f7</stagingProfileId>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <encoding>utf-8</encoding>
+                        <source>1.6</source>
+                        <target>1.6</target>
+                        <debug>true</debug>
+                        <optimize>true</optimize>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.3.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce-versions</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.0.4</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>[1.7.0,1.8)</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
@@ -126,7 +184,6 @@
         <profile>
             <id>run-its</id>
             <build>
-
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -158,8 +215,16 @@
                         </executions>
                     </plugin>
                 </plugins>
-
             </build>
         </profile>
     </profiles>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>3.2</version>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>
