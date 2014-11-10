@@ -22,10 +22,13 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.cxf.Bus;
+import org.apache.cxf.BusFactory;
 import org.apache.cxf.jaxrs.client.ClientConfiguration;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.transport.Conduit;
 import org.apache.cxf.transport.http.HTTPConduit;
+import org.apache.cxf.transport.http.asyncclient.AsyncHTTPConduit;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Scm;
 import org.apache.maven.plugin.AbstractMojo;
@@ -48,6 +51,7 @@ import org.codehaus.plexus.component.repository.exception.ComponentLookupExcepti
 import org.codehaus.plexus.context.Context;
 import org.codehaus.plexus.context.ContextException;
 import org.codehaus.plexus.personality.plexus.lifecycle.phase.Contextualizable;
+import org.slf4j.impl.StaticLoggerBinder;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.client.Client;
@@ -172,6 +176,7 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
     }
 
     public void execute() throws MojoExecutionException {
+        StaticLoggerBinder.getSingleton().setLog(getLog());
         if (skip) {
             getLog().info("Github Release Notes Plugin execution skipped");
             return;
@@ -217,7 +222,7 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
         return null;
     }
 
-    private void createRelease(String existingRelease, ReleaseInfo releaseInfo, WebTarget target) {
+    private void createRelease(String existingRelease, ReleaseInfo releaseInfo, WebTarget target) throws MojoExecutionException {
         if (existingRelease != null) {
             target = target.path(existingRelease);
         }
@@ -256,6 +261,9 @@ public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
     }
 
     private Client createClient() throws MojoExecutionException {
+        Bus bus = BusFactory.getDefaultBus();
+        // insist on the async connector to use PATCH.
+        bus.setProperty(AsyncHTTPConduit.USE_ASYNC, Boolean.TRUE);
         ClientBuilder builder = ClientBuilder.newBuilder();
         builder.register(new JacksonJsonProvider());
         if (keystore != null) {
