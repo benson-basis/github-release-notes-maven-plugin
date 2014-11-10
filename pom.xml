@@ -14,10 +14,10 @@
     <distributionManagement>
         <site>
             <id>github-site</id>
-            <url>scm:git:git@github.com:benson-basis/github-release-note-maven-plugin.git</url>
+            <url>scm:git:git@github.com:benson-basis/github-release-notes-maven-plugin.git</url>
         </site>
     </distributionManagement>
-    <url>http://github.com/benson-basis/github-release-notes-maven-plugin</url>
+    <url>http://benson-basis.github.io/github-release-notes-maven-plugin</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.version>3.0.4</maven.version>
