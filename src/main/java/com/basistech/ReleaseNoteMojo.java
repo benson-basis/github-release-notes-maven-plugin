@@ -81,58 +81,69 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * Write a release-note file to github.
+ * Write release notes file to github's release/tag structure.
  */
 @Mojo(name = "write-release-notes", defaultPhase = LifecyclePhase.VERIFY)
 public class ReleaseNoteMojo extends AbstractMojo implements Contextualizable {
     /**
-     * Location of the file.
+     * Location of the file containing the release notes.
      */
     @Parameter(defaultValue = "${basedir}/RELEASE-NOTES.md", required = true)
     private File releaseNotes;
 
+    /**
+     * Skip execution if this is true.
+     */
     @Parameter
     private boolean skip;
 
     /**
-     * SCM tag version. Default is scm.tag property.
+     * SCM tag version. If this is not set, the plugin will look for an existng property named 'scm.tag'.
+     * Failing that,
+     * it will look for a file named 'release.properties', read it, and lookm for that property.
+     * Default is scm.tag property. Thus, if you run this goal after release:prepare and before
+     * release:perform, it will read the value from the file.
      */
     @Parameter(property = "tag")
     private String tag;
 
     /**
-     * The user name for authentication
+     * The user name for authentication. You probably want to use a server in settings.xml.
      */
     @Parameter(defaultValue = "${github.global.userName}")
     private String userName;
 
     /**
-     * The password for authentication
+     * The password for authentication. You probably want to use a server in settings.xml.
      */
     @Parameter(defaultValue = "{github.global.password}")
     private String password;
 
     /**
-     * The oauth2 token for authentication
+     * The oauth2 token for authentication. You probably want to create a server in settings.xml with
+     * your token in the password element and no username element. The plugin will use that password
+     * as an oauth2 token.
      */
     @Parameter(defaultValue = "${github.global.oauth2Token}")
     private String oauth2Token;
 
     /**
-     * The Host for API calls.
+     * The Host for API calls. By default, the plugin reads this from the scm developerConnection.
      */
     @Parameter(defaultValue = "${github.global.host}")
     private String host;
 
     /**
      * The <em>id</em> of the server to use to retrieve the Github credentials. This id must identify a
-     * <em>server</em> from your <em>setting.xml</em> file.
+     * <em>server</em> in your <em>setting.xml</em> file.
      */
     @Parameter(defaultValue = "${github.global.server}", property = "server")
     private String serverId;
 
     /**
-     * With GFE, you might not have enough certificates in your chain.
+     * If you are using this plugin with github-for-enterprise, and your server's SSL certificate is
+     * signed with a certificate that is not trusted by the JRE, you must supply a keystore file
+     * that serves as a trust store to reassure Java about the server's certificate.
      */
     @Parameter
     private File keystore;
