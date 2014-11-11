@@ -121,7 +121,7 @@
       
 <p><b>Description</b>:</p>
       
-<div>Write a release-note file to github.</div>
+<div>Write release notes file to github's release/tag structure.</div>
       
 <p><b>Attributes</b>:</p>
       
@@ -156,7 +156,7 @@
             
 <td><tt>-</tt></td>
             
-<td>Location of the file.<br /><b>Default value is</b>: <tt>${basedir}/RELEASE-NOTES.md</tt>.<br /></td>
+<td>Location of the file containing the release notes.<br /><b>Default value is</b>: <tt>${basedir}/RELEASE-NOTES.md</tt>.<br /></td>
           </tr>
         </table>
       </div>
@@ -185,7 +185,8 @@
             
 <td><tt>-</tt></td>
             
-<td>The Host for API calls.<br /><b>Default value is</b>: <tt>${github.global.host}</tt>.<br /></td>
+<td>The Host for API calls. By default, the plugin reads this from the
+scm developerConnection.<br /><b>Default value is</b>: <tt>${github.global.host}</tt>.<br /></td>
           </tr>
           
 <tr class="a">
@@ -196,7 +197,10 @@
             
 <td><tt>-</tt></td>
             
-<td>With GFE, you might not have enough certificates in your chain.<br /></td>
+<td>If you are using this plugin with github-for-enterprise, and your
+server's SSL certificate is signed with a certificate that is not
+trusted by the JRE, you must supply a keystore file that serves as
+a trust store to reassure Java about the server's certificate.<br /></td>
           </tr>
           
 <tr class="b">
@@ -207,7 +211,10 @@
             
 <td><tt>-</tt></td>
             
-<td>The oauth2 token for authentication<br /><b>Default value is</b>: <tt>${github.global.oauth2Token}</tt>.<br /></td>
+<td>The oauth2 token for authentication. You probably want to create a
+server in settings.xml with your token in the password element and
+no username element. The plugin will use that password as an oauth2
+token.<br /><b>Default value is</b>: <tt>${github.global.oauth2Token}</tt>.<br /></td>
           </tr>
           
 <tr class="a">
@@ -218,7 +225,8 @@
             
 <td><tt>-</tt></td>
             
-<td>The password for authentication<br /><b>Default value is</b>: <tt>{github.global.password}</tt>.<br /></td>
+<td>The password for authentication. You probably want to use a server
+in settings.xml.<br /><b>Default value is</b>: <tt>{github.global.password}</tt>.<br /></td>
           </tr>
           
 <tr class="b">
@@ -230,7 +238,7 @@
 <td><tt>-</tt></td>
             
 <td>The <i>id</i> of the server to use to retrieve the Github
-credentials. This id must identify a <i>server</i> from your
+credentials. This id must identify a <i>server</i> in your
 <i>setting.xml</i> file.<br /><b>Default value is</b>: <tt>${github.global.server}</tt>.<br /><b>User property is</b>: <tt>server</tt>.</td>
           </tr>
           
@@ -242,7 +250,7 @@ credentials. This id must identify a <i>server</i> from your
             
 <td><tt>-</tt></td>
             
-<td>(no description)<br /></td>
+<td>Skip execution if this is true.<br /></td>
           </tr>
           
 <tr class="b">
@@ -253,7 +261,12 @@ credentials. This id must identify a <i>server</i> from your
             
 <td><tt>-</tt></td>
             
-<td>SCM tag version. Default is scm.tag property.<br /><b>User property is</b>: <tt>tag</tt>.</td>
+<td>SCM tag version. If this is not set, the plugin will look for an
+existng property named 'scm.tag'. Failing that, it will look for a
+file named 'release.properties', read it, and lookm for that
+property. Default is scm.tag property. Thus, if you run this goal
+after release:prepare and before release:perform, it will read the
+value from the file.<br /><b>User property is</b>: <tt>tag</tt>.</td>
           </tr>
           
 <tr class="a">
@@ -264,7 +277,8 @@ credentials. This id must identify a <i>server</i> from your
             
 <td><tt>-</tt></td>
             
-<td>The user name for authentication<br /><b>Default value is</b>: <tt>${github.global.userName}</tt>.<br /></td>
+<td>The user name for authentication. You probably want to use a server
+in settings.xml.<br /><b>Default value is</b>: <tt>${github.global.userName}</tt>.<br /></td>
           </tr>
         </table>
       </div>
@@ -274,7 +288,8 @@ credentials. This id must identify a <i>server</i> from your
         
 <p><b><a name="host">host</a>:</b></p>
         
-<div>The Host for API calls.</div>
+<div>The Host for API calls. By default, the plugin reads this from the
+scm developerConnection.</div>
         
 <ul>
           
@@ -286,7 +301,10 @@ credentials. This id must identify a <i>server</i> from your
         </ul><hr />
 <p><b><a name="keystore">keystore</a>:</b></p>
         
-<div>With GFE, you might not have enough certificates in your chain.</div>
+<div>If you are using this plugin with github-for-enterprise, and your
+server's SSL certificate is signed with a certificate that is not
+trusted by the JRE, you must supply a keystore file that serves as
+a trust store to reassure Java about the server's certificate.</div>
         
 <ul>
           
@@ -296,7 +314,10 @@ credentials. This id must identify a <i>server</i> from your
         </ul><hr />
 <p><b><a name="oauth2Token">oauth2Token</a>:</b></p>
         
-<div>The oauth2 token for authentication</div>
+<div>The oauth2 token for authentication. You probably want to create a
+server in settings.xml with your token in the password element and
+no username element. The plugin will use that password as an oauth2
+token.</div>
         
 <ul>
           
@@ -308,7 +329,8 @@ credentials. This id must identify a <i>server</i> from your
         </ul><hr />
 <p><b><a name="password">password</a>:</b></p>
         
-<div>The password for authentication</div>
+<div>The password for authentication. You probably want to use a server
+in settings.xml.</div>
         
 <ul>
           
@@ -320,7 +342,7 @@ credentials. This id must identify a <i>server</i> from your
         </ul><hr />
 <p><b><a name="releaseNotes">releaseNotes</a>:</b></p>
         
-<div>Location of the file.</div>
+<div>Location of the file containing the release notes.</div>
         
 <ul>
           
@@ -333,7 +355,7 @@ credentials. This id must identify a <i>server</i> from your
 <p><b><a name="serverId">serverId</a>:</b></p>
         
 <div>The <i>id</i> of the server to use to retrieve the Github
-credentials. This id must identify a <i>server</i> from your
+credentials. This id must identify a <i>server</i> in your
 <i>setting.xml</i> file.</div>
         
 <ul>
@@ -348,7 +370,7 @@ credentials. This id must identify a <i>server</i> from your
         </ul><hr />
 <p><b><a name="skip">skip</a>:</b></p>
         
-<div>(no description)</div>
+<div>Skip execution if this is true.</div>
         
 <ul>
           
@@ -358,7 +380,12 @@ credentials. This id must identify a <i>server</i> from your
         </ul><hr />
 <p><b><a name="tag">tag</a>:</b></p>
         
-<div>SCM tag version. Default is scm.tag property.</div>
+<div>SCM tag version. If this is not set, the plugin will look for an
+existng property named 'scm.tag'. Failing that, it will look for a
+file named 'release.properties', read it, and lookm for that
+property. Default is scm.tag property. Thus, if you run this goal
+after release:prepare and before release:perform, it will read the
+value from the file.</div>
         
 <ul>
           
@@ -370,7 +397,8 @@ credentials. This id must identify a <i>server</i> from your
         </ul><hr />
 <p><b><a name="userName">userName</a>:</b></p>
         
-<div>The user name for authentication</div>
+<div>The user name for authentication. You probably want to use a server
+in settings.xml.</div>
         
 <ul>
           
